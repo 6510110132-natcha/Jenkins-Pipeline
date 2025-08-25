@@ -38,6 +38,13 @@ pipeline {
             }
         }
 
+        // Manual Approval before Deploy
+        stage('Approval') {
+            steps {
+                input message: "Do you want to proceed with deployment?", ok: "Yes, Deploy"
+            }
+        }
+
         // Deploy (conditional with parameter)
         stage('Deploy') {
             when {
