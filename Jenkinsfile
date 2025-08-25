@@ -4,6 +4,7 @@ pipeline {
     // Parameters & Conditional Logic
     parameters {
         booleanParam(name: 'RUN_DEPLOY', defaultValue: true, description: 'Should we deploy?')
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Select environment')
     }
 
     stages {
@@ -16,6 +17,9 @@ pipeline {
         stage('Test in Parallel') {
             parallel {
                 stage('Unit Tests') {
+                    when {
+                        expression { currentBuild.currentResult == null || currentBuild.currentResult == 'SUCCESS' }
+                    }
                     steps {
                         echo 'Running unit tests...'
                         sh 'sleep 5'
@@ -27,10 +31,19 @@ pipeline {
                         sh 'sleep 5'
                     }
                 }
+                stage('Simulate Testing on Linux') {
+                    steps {
+                        echo 'Simulating tests on Linux...'
+                    }
+                }
+                stage('Simulate Testing on Windows') {
+                    steps {
+                        echo 'Simulating tests on Windows...'
+                    }
+                }
             }
         }
 
-        // Archiving Artifacts
         stage('Test Results') {
             steps {
                 sh 'echo "All tests passed!" > results.txt'
@@ -38,25 +51,25 @@ pipeline {
             }
         }
 
-        // Manual Approval before Deploy
         stage('Approval') {
+            options {
+                timeout(time: 2, unit: 'MINUTES')
+            }
             steps {
                 input message: "Do you want to proceed with deployment?", ok: "Yes, Deploy"
             }
         }
 
-        // Deploy (conditional with parameter)
         stage('Deploy') {
             when {
                 expression { return params.RUN_DEPLOY }
             }
             steps {
-                echo 'Deploying application...'
+                echo "Deploying application to environment: ${params.ENV}"
             }
         }
     }
 
-    // Post actions
     post {
         success {
             echo '✅ Pipeline finished successfully!'
