@@ -1,5 +1,6 @@
-pipeline {
+ pipeline {
     agent any
+//Parameters & Conditional Logic
     parameters {
         booleanParam(name: 'RUN_DEPLOY', defaultValue: true, description: 'Should we deploy?')
     }
@@ -13,6 +14,31 @@ pipeline {
             }
         }
     }
+//Parallel Stages
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building application...'
+            }
+        }
+        stage('Test in Parallel') {
+            parallel {
+                stage('Unit Tests') {
+                    steps {
+                        echo 'Running unit tests...'
+                        sh 'sleep 5'
+                    }
+                }
+                stage('Integration Tests') {
+                    steps {
+                        echo 'Running integration tests...'
+                        sh 'sleep 5'
+                    }
+                }
+            }
+        }
+    }
+//Archiving Artifacts
     stage('Test') {
     steps {
         sh 'echo "All tests passed!" > results.txt'
@@ -20,4 +46,5 @@ pipeline {
     }
 }
 
+    
 }
